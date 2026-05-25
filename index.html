@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Check-list Ménage</title>
+<style>
+  :root{ -webkit-tap-highlight-color: transparent; }
+  *{ box-sizing:border-box; margin:0; padding:0; }
+  html,body{ font-family:-apple-system,"SF Pro Display","SF Pro Text","Helvetica Neue",Helvetica,Arial,sans-serif; color:#1c1c1e; }
+  body{
+    min-height:100vh; position:relative; padding-bottom:40px;
+    background:
+      radial-gradient(1000px 700px at 5% -5%, #ffd5e8 0%, rgba(255,213,232,0) 55%),
+      radial-gradient(950px 680px at 100% 0%, #cfe0ff 0%, rgba(207,224,255,0) 55%),
+      radial-gradient(1100px 760px at 50% 105%, #d6f8e8 0%, rgba(214,248,232,0) 55%),
+      radial-gradient(900px 640px at 105% 100%, #ecdcff 0%, rgba(236,220,255,0) 55%),
+      linear-gradient(160deg,#eef2fb 0%, #f2eefb 100%);
+    background-attachment:fixed;
+  }
+  .wrap{ max-width:480px; margin:0 auto; padding:0 12px; }
+  .glass{
+    background:rgba(255,255,255,0.55);
+    border:1px solid rgba(255,255,255,0.7);
+    box-shadow:0 10px 34px rgba(30,40,80,0.16), inset 0 1px 0 rgba(255,255,255,0.85);
+    -webkit-backdrop-filter:blur(26px) saturate(180%);
+    backdrop-filter:blur(26px) saturate(180%);
+  }
+  /* header */
+  .topbar{ position:sticky; top:0; z-index:20; padding:12px 12px 0; }
+  .topcard{ border-radius:24px; padding:12px 16px; }
+  .toprow{ display:flex; align-items:center; justify-content:space-between; gap:10px; }
+  h1{ font-size:17px; font-weight:800; letter-spacing:-0.3px; }
+  .sub{ font-size:12px; color:#6b6b70; margin-top:2px; }
+  .btn-new{ font-size:12px; font-weight:600; color:#3a3a3c; background:rgba(255,255,255,0.6);
+    border:1px solid rgba(255,255,255,0.8); border-radius:999px; padding:8px 13px; display:flex; align-items:center; gap:6px; cursor:pointer; }
+  .bar{ height:10px; border-radius:999px; background:rgba(120,120,128,0.2); overflow:hidden; margin-top:12px; }
+  .fill{ height:100%; border-radius:999px; background:linear-gradient(90deg,#0A84FF,#5E5CE6); width:0; transition:width .3s ease, background .3s; }
+  .fill.done{ background:linear-gradient(90deg,#34C759,#30D158); }
+  /* method + notes cards */
+  .card{ border-radius:24px; margin-top:12px; overflow:hidden; }
+  .card-pad{ padding:13px 16px; }
+  .ttl{ font-size:15px; font-weight:600; display:flex; align-items:center; gap:8px; margin-bottom:6px; }
+  .mini{ font-size:13px; color:#3a3a3c; line-height:1.45; }
+  .mini b{ font-weight:650; }
+  .mini-li{ margin:3px 0; }
+  /* section */
+  .sec-head{ display:flex; align-items:center; gap:12px; padding:12px 14px; }
+  .ic{ width:38px; height:38px; border-radius:14px; display:flex; align-items:center; justify-content:center; flex:0 0 38px;
+       box-shadow:inset 0 1px 0 rgba(255,255,255,0.5); }
+  .ic svg{ width:19px; height:19px; stroke:#fff; fill:none; stroke-width:2; stroke-linecap:round; stroke-linejoin:round; }
+  .sec-meta{ flex:1; text-align:left; background:none; border:none; cursor:pointer; padding:0; }
+  .sec-title{ font-size:15px; font-weight:600; color:#1c1c1e; line-height:1.1; display:block; }
+  .sec-count{ font-size:11px; color:#9a9aa0; display:block; }
+  .btn-all{ font-size:11.5px; font-weight:600; border-radius:999px; padding:6px 12px; cursor:pointer;
+    display:flex; align-items:center; gap:5px; white-space:nowrap; }
+  .chev{ background:none; border:none; cursor:pointer; padding:2px; color:#c4c4cc; transition:transform .2s; }
+  .chev.open{ transform:rotate(180deg); }
+  .chev svg{ width:20px; height:20px; stroke:currentColor; fill:none; stroke-width:2; stroke-linecap:round; stroke-linejoin:round; }
+  ul{ list-style:none; border-top:1px solid rgba(120,120,128,0.18); }
+  li{ border-bottom:1px solid rgba(120,120,128,0.13); }
+  li:last-child{ border-bottom:none; }
+  .task{ width:100%; display:flex; align-items:flex-start; gap:12px; padding:12px 16px; text-align:left; background:none; border:none; cursor:pointer; }
+  .box{ width:23px; height:23px; margin-top:1px; border-radius:999px; flex:0 0 23px; display:flex; align-items:center; justify-content:center;
+        border:2px solid rgba(120,120,128,0.5); background:rgba(255,255,255,0.5); transition:all .15s; }
+  .box svg{ width:14px; height:14px; stroke:#fff; fill:none; stroke-width:3.5; stroke-linecap:round; stroke-linejoin:round; opacity:0; }
+  .task.on .box svg{ opacity:1; }
+  .txt{ flex:1; min-width:0; }
+  .label{ font-size:14.5px; line-height:1.32; color:#2c2c2e; }
+  .task.on .label{ text-decoration:line-through; color:#aeaeb2; }
+  .pill{ display:inline-flex; align-items:center; gap:4px; margin-top:6px; font-size:10px; font-weight:700; text-transform:uppercase;
+    letter-spacing:0.4px; color:#B86A00; background:rgba(255,159,10,0.18); border:1px solid rgba(255,159,10,0.35); border-radius:999px; padding:2px 8px; }
+  .pill svg{ width:12px; height:12px; stroke:currentColor; fill:none; stroke-width:2; }
+  /* info row */
+  .info{ display:flex; align-items:flex-start; gap:10px; padding:12px 16px; background:rgba(255,159,10,0.07); }
+  .info svg{ width:15px; height:15px; flex:0 0 15px; margin-top:2px; stroke:#E08600; fill:none; stroke-width:2; stroke-linecap:round; stroke-linejoin:round; }
+  .info span{ font-size:13.5px; font-style:italic; color:#7a5a1a; line-height:1.35; }
+  /* sms button */
+  .sms{ display:flex; align-items:center; justify-content:center; gap:8px; width:100%; margin-top:12px; border-radius:24px; padding:16px;
+    font-size:16px; font-weight:600; color:#fff; text-decoration:none; cursor:pointer; border:none;
+    background:linear-gradient(90deg,#34C759,#30D158); box-shadow:0 10px 24px rgba(52,199,89,0.42), inset 0 1px 0 rgba(255,255,255,0.4); }
+  .sms svg{ width:18px; height:18px; stroke:#fff; fill:none; stroke-width:2; stroke-linecap:round; stroke-linejoin:round; }
+  .foot{ text-align:center; font-size:11px; color:#9a9aa0; margin-top:8px; }
+  /* overlay */
+  .overlay{ position:fixed; inset:0; z-index:40; display:flex; align-items:center; justify-content:center; padding:20px;
+    background:rgba(20,24,40,0.32); -webkit-backdrop-filter:blur(6px); backdrop-filter:blur(6px); }
+  .overlay.hide{ display:none; }
+  .modal{ border-radius:24px; padding:24px; width:100%; max-width:360px; text-align:center; }
+  .modal-ic{ width:56px; height:56px; margin:0 auto 12px; border-radius:16px; display:flex; align-items:center; justify-content:center;
+    background:linear-gradient(145deg,#0A84FF,#5E5CE6); box-shadow:0 10px 24px rgba(10,132,255,0.4), inset 0 1px 0 rgba(255,255,255,0.5); }
+  .modal-ic svg{ width:26px; height:26px; stroke:#fff; fill:none; stroke-width:2; stroke-linecap:round; stroke-linejoin:round; }
+  .modal h3{ font-size:20px; font-weight:800; }
+  .modal p{ font-size:14px; color:#6b6b70; margin-top:8px; line-height:1.5; }
+  .modal-btn{ margin-top:20px; width:100%; padding:14px; border-radius:16px; font-size:15px; font-weight:600; color:#fff; border:none; cursor:pointer;
+    background:linear-gradient(90deg,#0A84FF,#5E5CE6); box-shadow:0 8px 20px rgba(10,132,255,0.42); }
+  .modal-row{ display:flex; gap:10px; margin-top:16px; }
+  .modal-row button{ flex:1; padding:12px; border-radius:16px; font-size:14px; font-weight:600; border:none; cursor:pointer; }
+  .b-cancel{ background:rgba(120,120,128,0.16); color:#3a3a3c; }
+  .b-ok{ color:#fff; background:linear-gradient(90deg,#0A84FF,#5E5CE6); box-shadow:0 6px 16px rgba(10,132,255,0.4); }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="topcard glass wrap" style="max-width:480px;">
+    <div class="toprow">
+      <div>
+        <h1>Ménage de l'appartement</h1>
+        <div class="sub" id="subtitle">à votre rythme</div>
+      </div>
+      <button class="btn-new" id="btnNew">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/></svg>
+        Nouveau
+      </button>
+    </div>
+    <div class="bar"><div class="fill" id="bar"></div></div>
+  </div>
+</div>
+
+<div class="wrap">
+  <!-- Gestes clés -->
+  <div class="card glass" style="background:linear-gradient(160deg, rgba(224,238,255,0.7), rgba(255,255,255,0.5));">
+    <div class="card-pad">
+      <div class="ttl">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#0A84FF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 3v4M3 5h4M6 17v4M4 19h4"/><path d="M13 3l2.5 6.5L22 12l-6.5 2.5L13 21l-2.5-6.5L4 12l6.5-2.5z"/></svg>
+        Les deux gestes clés
+      </div>
+      <div class="mini">
+        <div class="mini-li">· <b>Surfaces et plinthes</b> : un coup de poussière, puis passage humide (avec ou sans produit selon la surface).</div>
+        <div class="mini-li">· <b>Sols</b> : aspirateur, puis serpillière.</div>
+      </div>
+    </div>
+  </div>
+
+  <div id="sections"></div>
+
+  <!-- Petites attentions -->
+  <div class="card glass" style="background:linear-gradient(160deg, rgba(255,243,224,0.7), rgba(255,255,255,0.5));">
+    <div class="card-pad">
+      <div class="ttl">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#FF9F0A" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 9v4M12 17h.01"/><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/></svg>
+        Petites attentions
+      </div>
+      <div class="mini">
+        <div class="mini-li">· <b>Piano et bois</b> : pas de produit, un chiffon sec ou à peine humide suffit.</div>
+        <div class="mini-li">· <b>Robinetterie</b> : tout en douceur pour ne pas la rayer.</div>
+        <div class="mini-li">· <b>Paroi de douche</b> : c'est la tâche la plus délicate, prenez tout le temps qu'il faut pour qu'elle soit bien nette.</div>
+      </div>
+    </div>
+  </div>
+
+  <a class="sms" id="btnSms">
+    <svg viewBox="0 0 24 24"><path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/></svg>
+    Envoyer le récap par SMS
+  </a>
+  <div class="foot" id="smsFoot"></div>
+</div>
+
+<!-- Popup bienvenue -->
+<div class="overlay" id="welcome">
+  <div class="modal glass">
+    <div class="modal-ic">
+      <svg viewBox="0 0 24 24"><path d="M5 3v4M3 5h4M6 17v4M4 19h4"/><path d="M13 3l2.5 6.5L22 12l-6.5 2.5L13 21l-2.5-6.5L4 12l6.5-2.5z"/></svg>
+    </div>
+    <h3>Bonjour Cindy</h3>
+    <p>Cochez les tâches au fil de l'eau, pièce par pièce. En fin de passage, un bouton prépare le récap à envoyer. Merci et belle journée !</p>
+    <button class="modal-btn" id="btnWelcome">C'est parti</button>
+  </div>
+</div>
+
+<!-- Popup reset -->
+<div class="overlay hide" id="confirm">
+  <div class="modal glass" style="text-align:left;">
+    <h3 style="font-size:16px;">On repart à neuf ?</h3>
+    <p>Les cases seront décochées pour un nouveau passage, tranquillement.</p>
+    <div class="modal-row">
+      <button class="b-cancel" id="btnCancel">Annuler</button>
+      <button class="b-ok" id="btnReset">C'est reparti</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const PHONE = "0680347375";
+
+// icônes SVG par pièce (path interne)
+const I = {
+  kitchen:'<path d="M6 3v8a2 2 0 0 0 4 0V3"/><path d="M8 11v10"/><path d="M17 3c-1.5 0-3 1.5-3 4s1.5 4 3 4"/><path d="M17 3v18"/>',
+  living:'<path d="M4 11V8a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v3"/><path d="M3 11a2 2 0 0 1 2 2v3h14v-3a2 2 0 0 1 2-2"/><path d="M5 19v1M19 19v1"/>',
+  hall:'<rect x="7" y="3" width="10" height="18" rx="1.5"/><path d="M14 12h.01"/>',
+  wc:'<path d="M6 4h8v5a4 4 0 0 1-8 0z"/><path d="M10 17v3"/><path d="M7 20h6"/><path d="M14 6h3v3a2 2 0 0 1-2 2"/>',
+  bath:'<path d="M4 12h16v3a4 4 0 0 1-4 4H8a4 4 0 0 1-4-4z"/><path d="M6 12V6a2 2 0 0 1 4 0"/>',
+  bed:'<path d="M3 18v-6a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v6"/><path d="M3 14h18"/><path d="M3 18v2M21 18v2"/><path d="M7 10V8a2 2 0 0 1 2-2h6a2 2 0 0 1 2 2v2"/>',
+  baby:'<circle cx="12" cy="7" r="3"/><path d="M5 21c0-4 3-7 7-7s7 3 7 7"/>',
+  dressing:'<path d="M12 8l-8 6a1 1 0 0 0 .6 1.8h14.8A1 1 0 0 0 20 14l-8-6"/><path d="M12 4a1.5 1.5 0 1 0 1 2.6"/>',
+  entry:'<path d="M4 16c0-1 .5-2 2-2.5l5-2 2 4.5H4z"/><path d="M4 16v2h16"/>',
+  end:'<path d="M9 3h6v4H9z"/><path d="M7 7h10l1 12a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2z"/><path d="M12 11v6"/>'
+};
+
+const SW = { t: "Interrupteurs et poignées : poussière puis passage humide", s: "Interrupteurs/poignées" };
+const floor = (id) => ({ id, t: "Sol : aspirateur puis serpillière", s: "Sol" });
+
+const SECTIONS = [
+  { id:"kitchen", title:"Cuisine", tint:"#FF9F0A", items:[
+    { id:"k1", t:"Hotte, dessus de hotte, au-dessus de la crédence, produits et surfaces : poussière puis passage humide", s:"Hotte/crédence/surfaces" },
+    { id:"k2", t:"Plan de travail, dessous des appareils et de l'égouttoir : poussière puis passage humide", s:"Plan de travail" },
+    { id:"k3", t:"Robinetterie : enlever les traces d'eau et de calcaire en prenant soin de ne pas rayer", s:"Robinetterie (eau/calcaire)" },
+    { id:"k4", t:"Égouttoir à vaisselle : enlever les taches de calcaire", s:"Égouttoir (calcaire)" },
+    { id:"ksw", ...SW },
+    { id:"k5", t:"Sol : aspirateur puis serpillière", s:"Sol" },
+    { id:"kinfo", info:true, t:"Bien passer sous les meubles, le robot n'y accède pas." },
+    { id:"k7", t:"Micro-ondes et four : nettoyer l'intérieur", s:"Micro-ondes + four", month:true },
+    { id:"k8", t:"Rangement à bouteilles près de l'évier : poussière puis passage humide", s:"Rangement bouteilles", month:true },
+  ]},
+  { id:"living", title:"Salon", tint:"#0A84FF", items:[
+    { id:"l1", t:"Dessus de poubelle, banc, chaises, tables : poussière puis passage humide", s:"Banc/chaises/tables" },
+    { id:"l4", t:"Cadres, bibliothèque, piano et pieds du piano : poussière puis passage humide", s:"Cadres/biblio/piano" },
+    { id:"l7", info:true, t:"Piano et bois : passage humide SANS produit (chiffon sec ou à peine humide)." },
+    { id:"l3", t:"Sous les objets déco (les déplacer) : poussière puis passage humide", s:"Sous objets déco" },
+    { id:"l5", t:"Plinthes : poussière puis passage humide", s:"Plinthes" },
+    { id:"lsw", ...SW },
+    { id:"l2", t:"Aspirer fauteuils et canapé, entre les coussins inclus", s:"Aspirer fauteuils/canapé" },
+    floor("lfloor"),
+  ]},
+  { id:"hall", title:"Couloir", tint:"#30B0C7", items:[
+    { id:"h1", t:"Plinthes : poussière puis passage humide", s:"Plinthes" },
+    { id:"hsw", ...SW },
+    floor("h2"),
+  ]},
+  { id:"wc", title:"Toilettes", tint:"#32ADE6", items:[
+    { id:"w1", t:"Petit miroir, petit lavabo, robinet : poussière puis passage humide", s:"Miroir/lavabo/robinet" },
+    { id:"w2", t:"Support papier toilette (dessus et dessous), tuyau : poussière puis passage humide", s:"Support PQ/tuyau" },
+    { id:"w3", t:"Poubelle, dessus du cadre : poussière puis passage humide", s:"Poubelle/cadre" },
+    { id:"wsw", ...SW },
+    { id:"w4", t:"Toilettes : nettoyer au produit adapté", s:"Cuvette" },
+    { id:"w5", t:"Vider la petite poubelle dans la grosse", s:"Vider poubelle" },
+    floor("w6"),
+  ]},
+  { id:"bath", title:"Salle de bain", tint:"#5E5CE6", items:[
+    { id:"b1", t:"Miroir, lavabo : poussière puis passage humide", s:"Miroir/lavabo" },
+    { id:"b2", t:"Baignoire : poussière puis passage humide", s:"Baignoire" },
+    { id:"b3", t:"Robinetterie : enlever les traces d'eau et de calcaire en prenant soin de ne pas rayer", s:"Robinetterie (eau/calcaire)" },
+    { id:"b4", t:"Paroi de douche : prendre le temps qu'il faut pour un résultat bien net, c'est une tâche délicate", s:"Paroi de douche (bien net)" },
+    { id:"b5", t:"Plinthes : poussière puis passage humide", s:"Plinthes" },
+    { id:"bsw", ...SW },
+    { id:"b7", t:"Vider la petite poubelle dans la grosse", s:"Vider poubelle" },
+    floor("b6"),
+  ]},
+  { id:"bed", title:"Chambre", tint:"#BF5AF2", items:[
+    { id:"be1", t:"Tables de nuit (déplacer les objets) : poussière puis passage humide", s:"Tables de nuit" },
+    { id:"be3", t:"Radiateur : poussière puis passage humide", s:"Radiateur" },
+    { id:"be2", t:"Plinthes : poussière puis passage humide", s:"Plinthes" },
+    { id:"besw", ...SW },
+    { id:"be4", t:"Changer les draps si nécessaire", s:"Draps si besoin" },
+    floor("be5"),
+  ]},
+  { id:"baby", title:"Chambre du bébé", tint:"#FF375F", items:[
+    { id:"ba1", t:"Étagères, portemanteau, poubelle, étagères accessibles, lampe (déplacer les objets) : poussière puis passage humide", s:"Étagères + surfaces" },
+    { id:"ba2", t:"Plinthes : poussière puis passage humide", s:"Plinthes" },
+    { id:"basw", ...SW },
+    floor("ba3"),
+  ]},
+  { id:"dressing", title:"Dressing", tint:"#34C759", items:[
+    { id:"d1", t:"Bureau et pieds, chaise de bureau et ses pieds : poussière puis passage humide", s:"Bureau + chaise" },
+    { id:"d2", t:"Plinthes, radiateur, rebord de fenêtre : poussière puis passage humide", s:"Plinthes/radiateur/fenêtre" },
+    { id:"dsw", ...SW },
+    floor("d3"),
+  ]},
+  { id:"entry", title:"Entrée", tint:"#AC8E68", items:[
+    { id:"esw", ...SW },
+    { id:"e1", t:"Meuble à chaussures : poussière puis passage humide", s:"Meuble à chaussures", month:true },
+    floor("efloor"),
+  ]},
+  { id:"end", title:"En fin de ménage", tint:"#64D2FF", items:[
+    { id:"f1", t:"Vider l'aspirateur et passer un chiffon à l'intérieur", s:"Vider l'aspirateur" },
+  ]},
+];
+
+const ALL_IDS = SECTIONS.flatMap(s => s.items.filter(i => !i.info).map(i => i.id));
+const LS = "menage-html-v1";
+
+// état
+let checked = {};
+let openState = {};
+try { const raw = localStorage.getItem(LS); if (raw) checked = JSON.parse(raw).checked || {}; } catch(e){}
+SECTIONS.forEach(s => openState[s.id] = true);
+
+const save = () => { try { localStorage.setItem(LS, JSON.stringify({ checked })); } catch(e){} };
+
+const checkSvg = '<svg viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg>';
+const chevSvg  = '<svg viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></svg>';
+const calSvg   = '<svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M3 10h18M8 2v4M16 2v4"/></svg>';
+const warnSvg  = '<svg viewBox="0 0 24 24"><path d="M12 9v4M12 17h.01"/><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/></svg>';
+
+function tasksOf(sec){ return sec.items.filter(i => !i.info); }
+
+function render(){
+  const root = document.getElementById("sections");
+  root.innerHTML = "";
+  SECTIONS.forEach(sec => {
+    const tasks = tasksOf(sec);
+    const done = tasks.filter(i => checked[i.id]).length;
+    const total = tasks.length;
+    const allDone = done === total && total > 0;
+    const isOpen = openState[sec.id];
+
+    const card = document.createElement("div");
+    card.className = "card glass";
+
+    let html = '<div class="sec-head">'
+      + '<span class="ic" style="background:linear-gradient(145deg,'+sec.tint+','+sec.tint+'cc);box-shadow:0 6px 16px '+sec.tint+'55, inset 0 1px 0 rgba(255,255,255,0.5)"><svg viewBox="0 0 24 24">'+I[sec.id]+'</svg></span>'
+      + '<button class="sec-meta" data-toggle="'+sec.id+'"><span class="sec-title">'+sec.title+'</span><span class="sec-count">'+done+'/'+total+'</span></button>'
+      + '<button class="btn-all" data-all="'+sec.id+'" style="'
+        + (allDone
+            ? 'color:#8E8E93;background:rgba(120,120,128,0.14);border:1px solid rgba(120,120,128,0.25)'
+            : 'color:'+sec.tint+';background:'+sec.tint+'1f;border:1px solid '+sec.tint+'55')
+        + '">'+(allDone ? 'Tout décocher' : 'Tout cocher')+'</button>'
+      + '<button class="chev '+(isOpen?'open':'')+'" data-toggle="'+sec.id+'">'+chevSvg+'</button>'
+      + '</div>';
+
+    if (isOpen){
+      html += '<ul>';
+      sec.items.forEach(it => {
+        if (it.info){
+          html += '<li><div class="info">'+warnSvg+'<span>'+it.t+'</span></div></li>';
+        } else {
+          const on = !!checked[it.id];
+          html += '<li><button class="task'+(on?' on':'')+'" data-task="'+it.id+'" data-sec="'+sec.id+'">'
+            + '<span class="box" style="'+(on?('background:'+sec.tint+';border-color:'+sec.tint+';box-shadow:0 2px 8px '+sec.tint+'66'):'')+'">'+checkSvg+'</span>'
+            + '<span class="txt"><span class="label">'+it.t+'</span>'
+            + (it.month ? '<span class="pill">'+calSvg+' 1× / mois</span>' : '')
+            + '</span></button></li>';
+        }
+      });
+      html += '</ul>';
+    }
+    card.innerHTML = html;
+    root.appendChild(card);
+  });
+  updateProgress();
+}
+
+function updateProgress(){
+  const done = ALL_IDS.filter(id => checked[id]).length;
+  const pct = Math.round(done / ALL_IDS.length * 100);
+  const bar = document.getElementById("bar");
+  bar.style.width = pct + "%";
+  bar.classList.toggle("done", pct === 100);
+  document.getElementById("subtitle").textContent =
+    pct === 100 ? "tout est impeccable, un grand merci !" : pct === 0 ? "à votre rythme" : "beau travail, ça avance bien";
+  buildSms();
+}
+
+function buildSms(){
+  const date = new Date().toLocaleDateString("fr-FR", { day:"numeric", month:"long" });
+  const done = ALL_IDS.filter(id => checked[id]).length;
+  const faits = [], todo = [];
+  SECTIONS.forEach(s => s.items.forEach(i => {
+    if (i.info) return;
+    const line = "- " + s.title + " : " + i.s;
+    (checked[i.id] ? faits : todo).push(line);
+  }));
+  const lines = ["Bonjour, voici le recap du menage du " + date + ".",
+    done + "/" + ALL_IDS.length + " taches faites, merci !", "", "FAIT :"];
+  lines.push(faits.length ? faits.join("\n") : "- (rien cette fois)");
+  lines.push("", "A FAIRE la prochaine fois :");
+  lines.push(todo.length ? todo.join("\n") : "- rien, tout est nickel !");
+  lines.push("", "Belle journee !");
+  const body = encodeURIComponent(lines.join("\n"));
+  document.getElementById("btnSms").setAttribute("href", "sms:" + PHONE + "?&body=" + body);
+  document.getElementById("smsFoot").textContent =
+    "Ouvre Messages vers " + PHONE + ", récap prérempli. Il ne reste qu'à appuyer sur Envoyer.";
+}
+
+// interactions
+document.addEventListener("click", e => {
+  const t = e.target.closest("[data-task]");
+  if (t){
+    const id = t.getAttribute("data-task");
+    const secId = t.getAttribute("data-sec");
+    checked[id] = !checked[id];
+    const sec = SECTIONS.find(s => s.id === secId);
+    if (tasksOf(sec).every(i => checked[i.id])) openState[secId] = false;
+    save(); render(); return;
+  }
+  const all = e.target.closest("[data-all]");
+  if (all){
+    const secId = all.getAttribute("data-all");
+    const sec = SECTIONS.find(s => s.id === secId);
+    const fill = !(tasksOf(sec).every(i => checked[i.id]) && tasksOf(sec).length>0);
+    tasksOf(sec).forEach(i => checked[i.id] = fill);
+    if (fill) openState[secId] = false;
+    save(); render(); return;
+  }
+  const tg = e.target.closest("[data-toggle]");
+  if (tg){
+    const secId = tg.getAttribute("data-toggle");
+    openState[secId] = !openState[secId];
+    render(); return;
+  }
+});
+
+document.getElementById("btnNew").addEventListener("click", () => {
+  document.getElementById("confirm").classList.remove("hide");
+});
+document.getElementById("btnCancel").addEventListener("click", () => {
+  document.getElementById("confirm").classList.add("hide");
+});
+document.getElementById("btnReset").addEventListener("click", () => {
+  checked = {}; SECTIONS.forEach(s => openState[s.id] = true);
+  save(); render();
+  document.getElementById("confirm").classList.add("hide");
+});
+
+// popup bienvenue (une seule fois)
+const seen = (() => { try { return localStorage.getItem("menage-welcome-seen"); } catch(e){ return null; } })();
+if (seen) document.getElementById("welcome").classList.add("hide");
+document.getElementById("btnWelcome").addEventListener("click", () => {
+  document.getElementById("welcome").classList.add("hide");
+  try { localStorage.setItem("menage-welcome-seen", "1"); } catch(e){}
+});
+
+render();
+</script>
+</body>
+</html>
